@@ -1,0 +1,31 @@
+/**
+ * The following styles get applied inside the editor only.
+ *
+ * Replace them with your own styles or remove the file completely.
+ */
+
+.wp-block-d2i-blocks-task-item {
+
+	ul {
+		list-style-type: none;
+		padding: 0;
+		margin: 0;
+
+		li {
+			margin-bottom: 15px;
+
+			&.todo-completed {
+				opacity: 0.5;
+				text-decoration: line-through;
+			}
+
+			label {
+				font-size: 16px;
+			}
+		}
+	}
+
+	.task-list-doc-item {
+		margin-left: 25px;
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "d2i-blocks/task-item",
+	"version": "0.1.0",
+	"title": "Task Item",
+	"category": "widgets",
+	"icon": "yes",
+	"description": "A school task list item",
+	"parent": [ "d2i-blocks/task-list" ],
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"textdomain": "d2i-task-list-blocks",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css",
+	"usesContext": [ "d2i-task-list/schoolId" ]
+}
