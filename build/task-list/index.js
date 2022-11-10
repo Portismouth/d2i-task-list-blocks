@@ -44,6 +44,11 @@ function Edit(_ref) {
       schoolId: parseInt(newSchool)
     });
   };
+  const onChangeListName = newListName => {
+    setAttributes({
+      listName: newListName
+    });
+  };
   const schools = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_4__.useSelect)(select => {
     const schoolsArray = [];
     const schoolsStore = select('d2i/schools');
@@ -62,15 +67,23 @@ function Edit(_ref) {
       });
     }
     return schoolsArray;
-  });
+  }, [schoolId, listName]);
   return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)(), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.InspectorControls, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.PanelBody, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.SelectControl, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('School', 'd2i-task-list-block'),
     options: schools,
     value: schoolId,
     onChange: onChangeSchool
-  }))), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.InnerBlocks, {
+  }))), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.RichText, {
+    placeholder: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Task Name', 'd2i-task-list-block'),
+    tagName: "h4",
+    onChange: onChangeListName,
+    value: listName,
+    allowedFormats: []
+  }), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.InnerBlocks, {
     allowedBlocks: ['d2i-blocks/task-item'],
-    template: [['d2i-blocks/task-item']]
+    renderAppender: false,
+    template: [['d2i-blocks/task-item']],
+    templateLock: 'all'
   }));
 }
 
@@ -122,9 +135,13 @@ function save(_ref) {
     attributes
   } = _ref;
   const {
-    schoolId
+    schoolId,
+    listName
   } = attributes;
-  return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.useBlockProps.save(), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.InnerBlocks.Content, null));
+  return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.useBlockProps.save(), listName && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.RichText.Content, {
+    tagName: "h4",
+    value: listName
+  }), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.InnerBlocks.Content, null));
 }
 
 /***/ }),
@@ -219,7 +236,7 @@ module.exports = window["wp"]["i18n"];
   \**********************************/
 /***/ (function(module) {
 
-module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"d2i-blocks/task-list","version":"0.1.0","title":"D2i Task List","category":"widgets","icon":"editor-ul","description":"A task list for D2i clients.","supports":{"html":false},"textdomain":"d2i-task-list-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","attributes":{"schoolId":{"type":"number","default":0},"listName":{"type":"string"}},"providesContext":{"d2i-task-list/schoolId":"schoolId"}}');
+module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"d2i-blocks/task-list","version":"0.1.0","title":"D2i Task List","category":"widgets","icon":"editor-ul","description":"A task list for D2i clients.","supports":{"html":false,"reusable":false},"textdomain":"d2i-task-list-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","attributes":{"schoolId":{"type":"number","default":0},"listName":{"type":"string","source":"html","selector":"h4"}},"providesContext":{"d2i-task-list/schoolId":"schoolId","d2i-task-list/listName":"listName"}}');
 
 /***/ })
 

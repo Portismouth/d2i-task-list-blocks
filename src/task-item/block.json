@@ -16,5 +16,5 @@
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",
-	"usesContext": [ "d2i-task-list/schoolId" ]
+	"usesContext": [ "d2i-task-list/schoolId", "d2i-task-list/listName" ]
 }

@@ -1,28 +1,35 @@
 import { __ } from '@wordpress/i18n';
 import { useBlockProps } from '@wordpress/block-editor';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { CheckboxControl, TextControl, Button, Icon } from '@wordpress/components';
+import {
+	CheckboxControl,
+	TextControl,
+	Button,
+	Icon,
+} from '@wordpress/components';
 import './editor.scss';
 import { useState } from '@wordpress/element';
 
 export default function Edit( { context, isSelected } ) {
+	const schoolId = context[ 'd2i-task-list/schoolId' ];
+	const listName = context[ 'd2i-task-list/listName' ];
 	const [ newTaskTitle, setNewTaskTitle ] = useState( '' );
 	const [ addingTask, setAddingTask ] = useState( false );
 	const tasks = useSelect( ( select ) => {
 		const tasksStore = select( 'd2i/tasks' );
-		return (
-			tasksStore &&
-			tasksStore.getTasks( context[ 'd2i-task-list/schoolId' ] )
-		);
+		return tasksStore && listName && tasksStore.getTasks( schoolId, listName );
 	} );
-
+	console.log( tasks );
 	const actions = useDispatch( 'd2i/tasks' );
 	const addTask = actions && actions.addTask;
 	const toggleTask = actions && actions.toggleTask;
 	return (
 		<div { ...useBlockProps() }>
-			{ ! tasks && <p>{ __( 'Please add some tasks', 'todo-list' ) }</p> }
-			{
+			{ ! tasks ||
+				( tasks.length < 1 && (
+					<p>{ __( 'Please add some tasks', 'todo-list' ) }</p>
+				) ) }
+			{ tasks &&
 				<>
 					<ul>
 						{ tasks.map( ( task, index ) => (
@@ -60,7 +67,9 @@ export default function Edit( { context, isSelected } ) {
 														'Add Social Link',
 														'team-members'
 													) }
-													onClick={ () => console.log('click') }
+													onClick={ () =>
+														console.log( 'click' )
+													}
 												>
 													<Icon icon="plus" />
 												</button>
@@ -77,8 +86,8 @@ export default function Edit( { context, isSelected } ) {
 							if ( addTask && newTaskTitle ) {
 								const newTask = {
 									title: newTaskTitle,
-									schoolId:
-										context[ 'd2i-task-list/schoolId' ],
+									schoolId,
+									listName
 								};
 								setAddingTask( true );
 								await addTask( newTask );

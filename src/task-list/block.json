@@ -8,7 +8,8 @@
 	"icon": "editor-ul",
 	"description": "A task list for D2i clients.",
 	"supports": {
-		"html": false
+		"html": false,
+		"reusable": false
 	},
 	"textdomain": "d2i-task-list-blocks",
 	"editorScript": "file:./index.js",
@@ -20,10 +21,13 @@
 			"default": 0
 		},
 		"listName": {
-			"type": "string"
+			"type": "string",
+			"source": "html",
+			"selector": "h4"
 		}
 	},
 	"providesContext": {
-		"d2i-task-list/schoolId": "schoolId"
+		"d2i-task-list/schoolId": "schoolId",
+		"d2i-task-list/listName": "listName"
 	}
 }

@@ -26,18 +26,18 @@ function d2i_task_list_render_tasks($attributes, $content, $block)
 {
 	$school_id = $block->context['d2i-task-list/schoolId'];
 	$args = array(
-        'numberposts' => -1,
-        'post_type'   => 'task-item',
-        'meta_query'  => array(
-            array(
-                'key'     => 'school',
-                'value'   => intval($school_id),
-                'compare' => 'LIKE'
-            )
-        )
-    );
+		'numberposts' => -1,
+		'post_type'   => 'task-item',
+		'meta_query'  => array(
+			array(
+				'key'     => 'school',
+				'value'   => intval($school_id),
+				'compare' => 'LIKE'
+			)
+		)
+	);
 
-    $school_tasks = get_posts($args);
+	$school_tasks = get_posts($args);
 	$tasks = '<ul>';
 	foreach ($school_tasks as $task) {
 		$tasks .= '<li>';
@@ -57,3 +57,46 @@ function d2i_task_list_block_init()
 	));
 }
 add_action('init', 'd2i_task_list_block_init');
+
+add_filter( 'rest_task-item_query', function( $args, $request ){
+
+    if ( $meta_key = $request->get_param( 'folder' ) ) {
+        $args['meta_key'] = $meta_key;
+        $args['meta_value'] = $request->get_param( 'folderName' );
+    }
+
+    return $args;
+}, 10, 2 );
+
+function add_custom_field()
+{
+	register_rest_field(
+		'task-item',
+		'folder',
+		array(
+			'get_callback'  => 'rest_get_post_field',
+			'update_callback'   => null,
+			'schema'            => null,
+		)
+	);
+	register_rest_field(
+		'task-item',
+		'school',
+		array(
+			'get_callback'  => 'rest_get_school_field',
+			'update_callback'   => null,
+			'schema'            => null,
+		)
+	);
+}
+add_action('rest_api_init', 'add_custom_field');
+
+function rest_get_post_field($post, $field_name, $request)
+{
+	return get_post_meta($post['id'], $field_name, true);
+}
+
+function rest_get_school_field($post, $field_name, $request)
+{
+	return get_post_meta($post['id'], $field_name, true);
+}

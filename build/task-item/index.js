@@ -35,16 +35,19 @@ function Edit(_ref) {
     context,
     isSelected
   } = _ref;
+  const schoolId = context['d2i-task-list/schoolId'];
+  const listName = context['d2i-task-list/listName'];
   const [newTaskTitle, setNewTaskTitle] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
   const [addingTask, setAddingTask] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const tasks = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_3__.useSelect)(select => {
     const tasksStore = select('d2i/tasks');
-    return tasksStore && tasksStore.getTasks(context['d2i-task-list/schoolId']);
+    return tasksStore && listName && tasksStore.getTasks(schoolId, listName);
   });
+  console.log(tasks);
   const actions = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_3__.useDispatch)('d2i/tasks');
   const addTask = actions && actions.addTask;
   const toggleTask = actions && actions.toggleTask;
-  return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)(), !tasks && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Please add some tasks', 'todo-list')), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", null, tasks.map((task, index) => (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
+  return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)(), !tasks || tasks.length < 1 && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Please add some tasks', 'todo-list')), tasks && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", null, tasks.map((task, index) => (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
     key: index
   }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.CheckboxControl, {
     disabled: task.loading,
@@ -67,7 +70,8 @@ function Edit(_ref) {
       if (addTask && newTaskTitle) {
         const newTask = {
           title: newTaskTitle,
-          schoolId: context['d2i-task-list/schoolId']
+          schoolId,
+          listName
         };
         setAddingTask(true);
         await addTask(newTask);
@@ -219,7 +223,7 @@ module.exports = window["wp"]["i18n"];
   \**********************************/
 /***/ (function(module) {
 
-module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"d2i-blocks/task-item","version":"0.1.0","title":"Task Item","category":"widgets","icon":"yes","description":"A school task list item","parent":["d2i-blocks/task-list"],"supports":{"html":false,"reusable":false},"textdomain":"d2i-task-list-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","usesContext":["d2i-task-list/schoolId"]}');
+module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"d2i-blocks/task-item","version":"0.1.0","title":"Task Item","category":"widgets","icon":"yes","description":"A school task list item","parent":["d2i-blocks/task-list"],"supports":{"html":false,"reusable":false},"textdomain":"d2i-task-list-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","usesContext":["d2i-task-list/schoolId","d2i-task-list/listName"]}');
 
 /***/ })
 
