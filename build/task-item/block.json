@@ -18,8 +18,14 @@
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",
   "style": "file:./style-index.css",
+  "attributes": {
+    "directoryName": {
+      "type": "string",
+      "default": ""
+    }
+  },
   "usesContext": [
     "d2i-task-list/schoolId",
-    "d2i-task-list/listName"
+    "d2i-task-list/directoryName"
   ]
 }

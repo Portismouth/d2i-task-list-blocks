@@ -28,6 +28,6 @@
   },
   "providesContext": {
     "d2i-task-list/schoolId": "schoolId",
-    "d2i-task-list/listName": "listName"
+    "d2i-task-list/directoryName": "listName"
   }
 }

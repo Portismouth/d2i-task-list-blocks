@@ -25,6 +25,8 @@
 function d2i_task_list_render_tasks($attributes, $content, $block)
 {
 	$school_id = $block->context['d2i-task-list/schoolId'];
+	$folder = $block->context['d2i-task-list/listName'];
+
 	$args = array(
 		'numberposts' => -1,
 		'post_type'   => 'task-item',
@@ -32,6 +34,11 @@ function d2i_task_list_render_tasks($attributes, $content, $block)
 			array(
 				'key'     => 'school',
 				'value'   => intval($school_id),
+				'compare' => 'LIKE'
+			),
+			array(
+				'key'     => 'folder',
+				'value'   => $attributes['directoryName'],
 				'compare' => 'LIKE'
 			)
 		)

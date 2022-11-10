@@ -4,7 +4,12 @@ export default function save( { attributes } ) {
 	const { schoolId, listName } = attributes;
 	return (
 		<div { ...useBlockProps.save() }>
-			{ listName && <RichText.Content tagName="h4" value={ listName } /> }
+			{ listName && (
+				<RichText.Content
+					tagName="h4"
+					value={ listName }
+				/>
+			) }
 			<InnerBlocks.Content />
 		</div>
 	);

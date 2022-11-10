@@ -6,33 +6,65 @@ import {
 	TextControl,
 	Button,
 	Icon,
+	Tooltip,
 } from '@wordpress/components';
 import './editor.scss';
-import { useState } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
+import apiFetch from '@wordpress/api-fetch';
 
-export default function Edit( { context, isSelected } ) {
+export default function Edit( { attributes, setAttributes, context } ) {
 	const schoolId = context[ 'd2i-task-list/schoolId' ];
-	const listName = context[ 'd2i-task-list/listName' ];
+	const directoryNameFromContext = context[ 'd2i-task-list/directoryName' ];
+	const { directoryName } = attributes;
+
 	const [ newTaskTitle, setNewTaskTitle ] = useState( '' );
 	const [ addingTask, setAddingTask ] = useState( false );
-	const tasks = useSelect( ( select ) => {
-		const tasksStore = select( 'd2i/tasks' );
-		return tasksStore && listName && tasksStore.getTasks( schoolId, listName );
-	} );
-	console.log( tasks );
+	const [ tasksState, setNewTasks ] = useState( { tasks: [] } );
+
+	useEffect( () => {
+		apiFetch( {
+			path: `/d2i-task-list/v1/task-items/${ schoolId }?directoryName=${ directoryName }`,
+		} ).then( ( res ) => {
+			// return res;
+			setNewTasks( { tasks: res } );
+		} );
+	}, [ schoolId, directoryNameFromContext ] );
+
+	useEffect( async () => {
+		const initialTasks = await fetchTasks();
+		setNewTasks( { tasks: initialTasks } );
+	}, [] );
+
+	useEffect( () => {
+		setAttributes( { directoryName: directoryNameFromContext } );
+	}, [ null, directoryNameFromContext ] );
+
+	const fetchTasks = async () => {
+		apiFetch( {
+			path: `/d2i-task-list/v1/task-items/${ schoolId }?directoryName=${ directoryName }`,
+		} ).then( ( res ) => {
+			// return res;
+			return res;
+		} );
+	};
+	// const tasks = useSelect( ( select ) => {
+	// 	const tasksStore = select( 'd2i/tasks' );
+	// 	return tasksStore && listName && tasksStore.getTasks( schoolId, listName );
+	// } );
+
 	const actions = useDispatch( 'd2i/tasks' );
 	const addTask = actions && actions.addTask;
 	const toggleTask = actions && actions.toggleTask;
 	return (
 		<div { ...useBlockProps() }>
-			{ ! tasks ||
-				( tasks.length < 1 && (
+			{ ! tasksState.tasks ||
+				( tasksState.tasks.length < 1 && (
 					<p>{ __( 'Please add some tasks', 'todo-list' ) }</p>
 				) ) }
-			{ tasks &&
+			{ tasksState.tasks && (
 				<>
 					<ul>
-						{ tasks.map( ( task, index ) => (
+						{ tasksState.tasks.map( ( task, index ) => (
 							<li key={ index }>
 								<div>
 									<CheckboxControl
@@ -62,17 +94,26 @@ export default function Edit( { context, isSelected } ) {
 												) }
 											</ul>
 											<div>
-												<button
-													aria-label={ __(
-														'Add Social Link',
-														'team-members'
+												<Tooltip
+													text={ __(
+														'Add Document',
+														'd2i-task-lists-block'
 													) }
-													onClick={ () =>
-														console.log( 'click' )
-													}
 												>
-													<Icon icon="plus" />
-												</button>
+													<button
+														aria-label={ __(
+															'Add Document',
+															'team-members'
+														) }
+														onClick={ () =>
+															console.log(
+																'click'
+															)
+														}
+													>
+														<Icon icon="plus" />
+													</button>
+												</Tooltip>
 											</div>
 										</>
 									) }
@@ -87,11 +128,18 @@ export default function Edit( { context, isSelected } ) {
 								const newTask = {
 									title: newTaskTitle,
 									schoolId,
-									listName
+									directoryName,
 								};
 								setAddingTask( true );
-								await addTask( newTask );
+								const newSavedTask = await addTask( newTask );
+								console.log( newSavedTask );
 								setNewTaskTitle( '' );
+								setNewTasks( {
+									tasks: [
+										...tasksState.tasks,
+										newSavedTask.task,
+									],
+								} );
 								setAddingTask( false );
 							}
 						} }
@@ -106,7 +154,7 @@ export default function Edit( { context, isSelected } ) {
 						</Button>
 					</form>
 				</>
-			}
+			) }
 		</div>
 	);
 }

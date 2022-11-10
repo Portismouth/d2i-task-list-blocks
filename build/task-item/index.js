@@ -23,6 +23,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @wordpress/components */ "@wordpress/components");
 /* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__);
 /* harmony import */ var _editor_scss__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./editor.scss */ "./src/task-item/editor.scss");
+/* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @wordpress/api-fetch */ "@wordpress/api-fetch");
+/* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6__);
+
 
 
 
@@ -32,22 +35,58 @@ __webpack_require__.r(__webpack_exports__);
 
 function Edit(_ref) {
   let {
-    context,
-    isSelected
+    attributes,
+    setAttributes,
+    context
   } = _ref;
   const schoolId = context['d2i-task-list/schoolId'];
-  const listName = context['d2i-task-list/listName'];
+  const directoryNameFromContext = context['d2i-task-list/directoryName'];
+  const {
+    directoryName
+  } = attributes;
   const [newTaskTitle, setNewTaskTitle] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
   const [addingTask, setAddingTask] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-  const tasks = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_3__.useSelect)(select => {
-    const tasksStore = select('d2i/tasks');
-    return tasksStore && listName && tasksStore.getTasks(schoolId, listName);
+  const [tasksState, setNewTasks] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)({
+    tasks: []
   });
-  console.log(tasks);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6___default()({
+      path: `/d2i-task-list/v1/task-items/${schoolId}?directoryName=${directoryName}`
+    }).then(res => {
+      // return res;
+      setNewTasks({
+        tasks: res
+      });
+    });
+  }, [schoolId, directoryNameFromContext]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(async () => {
+    const initialTasks = await fetchTasks();
+    setNewTasks({
+      tasks: initialTasks
+    });
+  }, []);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setAttributes({
+      directoryName: directoryNameFromContext
+    });
+  }, [null, directoryNameFromContext]);
+  const fetchTasks = async () => {
+    _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6___default()({
+      path: `/d2i-task-list/v1/task-items/${schoolId}?directoryName=${directoryName}`
+    }).then(res => {
+      // return res;
+      return res;
+    });
+  };
+  // const tasks = useSelect( ( select ) => {
+  // 	const tasksStore = select( 'd2i/tasks' );
+  // 	return tasksStore && listName && tasksStore.getTasks( schoolId, listName );
+  // } );
+
   const actions = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_3__.useDispatch)('d2i/tasks');
   const addTask = actions && actions.addTask;
   const toggleTask = actions && actions.toggleTask;
-  return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)(), !tasks || tasks.length < 1 && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Please add some tasks', 'todo-list')), tasks && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", null, tasks.map((task, index) => (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
+  return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)(), !tasksState.tasks || tasksState.tasks.length < 1 && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Please add some tasks', 'todo-list')), tasksState.tasks && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", null, tasksState.tasks.map((task, index) => (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
     key: index
   }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.CheckboxControl, {
     disabled: task.loading,
@@ -59,23 +98,29 @@ function Edit(_ref) {
       key: docIndex,
       className: "task-list-doc-item"
     }, doc.document_name);
-  })), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
-    "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Add Social Link', 'team-members'),
+  })), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.Tooltip, {
+    text: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Add Document', 'd2i-task-lists-block')
+  }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Add Document', 'team-members'),
     onClick: () => console.log('click')
   }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.Icon, {
     icon: "plus"
-  })))))))), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
+  }))))))))), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
     onSubmit: async e => {
       e.preventDefault();
       if (addTask && newTaskTitle) {
         const newTask = {
           title: newTaskTitle,
           schoolId,
-          listName
+          directoryName
         };
         setAddingTask(true);
-        await addTask(newTask);
+        const newSavedTask = await addTask(newTask);
+        console.log(newSavedTask);
         setNewTaskTitle('');
+        setNewTasks({
+          tasks: [...tasksState.tasks, newSavedTask.task]
+        });
         setAddingTask(false);
       }
     },
@@ -157,6 +202,16 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "@wordpress/api-fetch":
+/*!**********************************!*\
+  !*** external ["wp","apiFetch"] ***!
+  \**********************************/
+/***/ (function(module) {
+
+module.exports = window["wp"]["apiFetch"];
+
+/***/ }),
+
 /***/ "@wordpress/block-editor":
 /*!*************************************!*\
   !*** external ["wp","blockEditor"] ***!
@@ -223,7 +278,7 @@ module.exports = window["wp"]["i18n"];
   \**********************************/
 /***/ (function(module) {
 
-module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"d2i-blocks/task-item","version":"0.1.0","title":"Task Item","category":"widgets","icon":"yes","description":"A school task list item","parent":["d2i-blocks/task-list"],"supports":{"html":false,"reusable":false},"textdomain":"d2i-task-list-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","usesContext":["d2i-task-list/schoolId","d2i-task-list/listName"]}');
+module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"d2i-blocks/task-item","version":"0.1.0","title":"Task Item","category":"widgets","icon":"yes","description":"A school task list item","parent":["d2i-blocks/task-list"],"supports":{"html":false,"reusable":false},"textdomain":"d2i-task-list-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","attributes":{"directoryName":{"type":"string","default":""}},"usesContext":["d2i-task-list/schoolId","d2i-task-list/directoryName"]}');
 
 /***/ })
 
