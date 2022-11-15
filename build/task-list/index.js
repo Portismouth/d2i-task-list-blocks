@@ -78,13 +78,14 @@ function Edit(_ref) {
     onChange: onChangeSchool
   }))), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.RichText, {
     placeholder: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Folder Name', 'team-member'),
-    tagName: "h4",
+    tagName: "h2",
     onChange: onChangeName,
     value: listName,
     allowedFormats: []
   }), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.InnerBlocks, {
     allowedBlocks: ['d2i-blocks/task-item'],
-    template: [['d2i-blocks/task-item']]
+    template: [['d2i-blocks/task-item']],
+    renderAppender: false
   }));
 }
 
@@ -140,7 +141,7 @@ function save(_ref) {
     listName
   } = attributes;
   return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.useBlockProps.save(), listName && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.RichText.Content, {
-    tagName: "h4",
+    tagName: "h2",
     value: listName
   }), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.InnerBlocks.Content, null));
 }
@@ -247,7 +248,7 @@ module.exports = window["wp"]["i18n"];
   \**********************************/
 /***/ (function(module) {
 
-module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"d2i-blocks/task-list","version":"0.1.0","title":"D2i Task List","category":"widgets","icon":"editor-ul","description":"A task list for D2i clients.","supports":{"html":false,"reusable":false},"textdomain":"d2i-task-list-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","attributes":{"schoolId":{"type":"number","default":0},"listName":{"type":"string","source":"html","selector":"h4"}},"providesContext":{"d2i-task-list/schoolId":"schoolId","d2i-task-list/directoryName":"listName"}}');
+module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"d2i-blocks/task-list","version":"0.1.0","title":"D2i Task List","category":"widgets","icon":"editor-ul","description":"A task list for D2i clients.","supports":{"html":false,"reusable":false},"textdomain":"d2i-task-list-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","attributes":{"schoolId":{"type":"number","default":0},"listName":{"type":"string","source":"html","selector":"h2"}},"providesContext":{"d2i-task-list/schoolId":"schoolId","d2i-task-list/directoryName":"listName"}}');
 
 /***/ })
 

@@ -62,7 +62,7 @@ export default function Edit( { attributes, setAttributes } ) {
 			</InspectorControls>
 			<RichText
 				placeholder={ __( 'Folder Name', 'team-member' ) }
-				tagName="h4"
+				tagName="h2"
 				onChange={ onChangeName }
 				value={ listName }
 				allowedFormats={ [] }
@@ -71,6 +71,7 @@ export default function Edit( { attributes, setAttributes } ) {
 			<InnerBlocks
 				allowedBlocks={ [ 'd2i-blocks/task-item' ] }
 				template={ [ [ 'd2i-blocks/task-item' ] ] }
+				renderAppender={false}
 			/>
 		</div>
 	);

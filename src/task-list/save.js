@@ -6,7 +6,7 @@ export default function save( { attributes } ) {
 		<div { ...useBlockProps.save() }>
 			{ listName && (
 				<RichText.Content
-					tagName="h4"
+					tagName="h2"
 					value={ listName }
 				/>
 			) }

@@ -23,7 +23,7 @@
     "listName": {
       "type": "string",
       "source": "html",
-      "selector": "h4"
+      "selector": "h2"
     }
   },
   "providesContext": {

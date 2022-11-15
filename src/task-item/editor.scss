@@ -12,7 +12,23 @@
 		margin: 0;
 
 		li {
+			display: flex;
+			align-items: flex-end;
 			margin-bottom: 15px;
+
+			&.is-completed {
+				opacity: 0.5;
+				text-decoration: line-through;
+			}
+
+			.task-check-control {
+				margin-right: 20px;
+			}
+
+			.components-external-link {
+				flex-grow: 3;
+				margin-bottom: calc(8px);
+			}
 
 			&.todo-completed {
 				opacity: 0.5;
