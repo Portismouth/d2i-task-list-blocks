@@ -16,18 +16,26 @@
 			align-items: flex-end;
 			margin-bottom: 15px;
 
+			.components-base-control__field {
+				margin-bottom: 0;
+			}
+
 			&.is-completed {
 				opacity: 0.5;
 				text-decoration: line-through;
 			}
 
 			.task-check-control {
-				margin-right: 20px;
+				flex-grow: 1;
+			}
+
+			.task-edit-button {
+				flex-grow: 2;
 			}
 
 			.components-external-link {
 				flex-grow: 3;
-				margin-bottom: calc(8px);
+				margin-bottom: 0;
 			}
 
 			&.todo-completed {
@@ -36,6 +44,7 @@
 			}
 
 			label {
+				flex-grow: 2;
 				font-size: 16px;
 			}
 		}

@@ -14,6 +14,7 @@ import {
 import './editor.scss';
 import { useState, useEffect, useRef } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
+import TaskEdit from './task-edit';
 
 export default function Edit( { attributes, setAttributes, context } ) {
 	const schoolId = context[ 'd2i-task-list/schoolId' ];
@@ -25,35 +26,34 @@ export default function Edit( { attributes, setAttributes, context } ) {
 	const [ externalLink, setExternalLink ] = useState();
 	const [ addingTask, setAddingTask ] = useState( false );
 	const [ tasksState, setTasks ] = useState( { tasks: [] } );
+	const [ isUnsavedTasksConfirmed, setUnsavedTasksConfirmed ] =
+		useState( false );
 
 	const taskTitleRef = useRef();
 
 	useEffect( () => {
-		apiFetch( {
-			path: `/d2i-task-list/v1/task-items/${ schoolId }?directoryName=${ directoryName }`,
-		} ).then( ( res ) => {
-			// return res;
-			setTasks( { tasks: res } );
-		} );
+		if ( schoolId !== 0 && directoryNameFromContext ) {
+			apiFetch( {
+				path: `/d2i-task-list/v1/task-items/${ schoolId }?directoryName=${ directoryName }`,
+			} ).then( ( res ) => {
+				setTasks( { tasks: res } );
+			} );
+		}
 	}, [ schoolId, directoryNameFromContext ] );
-
-	// useEffect( async () => {
-	// 	const initialTasks = await fetchTasks();
-	// 	setTasks( { tasks: initialTasks } );
-	// }, [] );
 
 	useEffect( () => {
 		setAttributes( { directoryName: directoryNameFromContext } );
 	}, [ null, directoryNameFromContext ] );
 
-	const fetchTasks = async () => {
-		apiFetch( {
-			path: `/d2i-task-list/v1/task-items/${ schoolId }?directoryName=${ directoryName }`,
-		} ).then( ( res ) => {
-			// return res;
-			return res;
-		} );
-	};
+	useEffect( () => {
+		if ( directoryName ) {
+			apiFetch( {
+				path: `/d2i-task-list/v1/task-items/by-folder?directoryName=${ directoryName }`,
+			} ).then( ( res ) => {
+				setTasks( { tasks: res } );
+			} );
+		}
+	}, [ directoryName ] );
 
 	const onToggleTask = ( task, index ) => {
 		task.isCompleted = task.isCompleted === '1' ? '0' : '1';
@@ -67,8 +67,6 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			method: 'POST',
 			data: tasksCopy[ index ],
 		} ).then( ( res ) => {
-			console.log( res );
-
 			setTasks( { tasks: tasksCopy } );
 		} );
 	};
@@ -101,7 +99,23 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		setNewTaskType( v );
 	};
 
-	console.log( tasksState.tasks );
+	const onConfirmUnsavedTasks = ( event ) => {
+		if ( tasksState.tasks ) {
+			console.log( event );
+			setUnsavedTasksConfirmed( true );
+		}
+	};
+
+	const onEditTaskItem = ( task, index ) => {
+		task.isEdit = ! task.isEdit;
+		const tasksCopy = [ ...tasksState.tasks ];
+		tasksCopy[ index ] = {
+			...tasksCopy[ index ],
+			isEdit: task.isEdit,
+		};
+
+		setTasks( { tasks: tasksCopy } );
+	};
 
 	const actions = useDispatch( 'd2i/tasks' );
 	const addTask = actions && actions.addTask;
@@ -114,7 +128,7 @@ export default function Edit( { attributes, setAttributes, context } ) {
 							<p>
 								{ __(
 									'Please add some tasks using the form below',
-									'todo-list'
+									'd2i-task-list-blocks'
 								) }
 							</p>
 						</CardBody>
@@ -123,7 +137,23 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			{ tasksState.tasks && (
 				<>
 					<Card>
-						<CardHeader size="xSmall">Tasks</CardHeader>
+						<CardHeader size="xSmall">
+							<>
+								Tasks
+								{ ! isUnsavedTasksConfirmed && (
+									<Button
+										disabled={ addingTask }
+										onClick={ onConfirmUnsavedTasks }
+										isPrimary
+									>
+										{ __(
+											'Confirm New Tasks',
+											'd2i-task-list-blocks'
+										) }
+									</Button>
+								) }
+							</>
+						</CardHeader>
 						<CardBody>
 							<ul>
 								{ tasksState.tasks.map( ( task, index ) => (
@@ -134,24 +164,62 @@ export default function Edit( { attributes, setAttributes, context } ) {
 											'is-completed'
 										}
 									>
-										<CheckboxControl
-											disabled={ task.loading }
-											label={ task.title }
-											checked={ task.isCompleted === '1' }
-											onChange={ () => {
-												onToggleTask( task, index );
-											} }
-											className={ 'task-check-control' }
-										/>
-										{ task.documentLink && (
-											<ExternalLink
-												href={ task.documentLink.url }
-												target={
-													task.documentLink.target
-												}
-											>
-												{ task.documentLink.title }
-											</ExternalLink>
+										{ ! task.isEdit && (
+											<>
+												<CheckboxControl
+													disabled={ task.loading }
+													label={ task.title }
+													checked={
+														task.isCompleted === '1'
+													}
+													onChange={ () => {
+														onToggleTask(
+															task,
+															index
+														);
+													} }
+													className={
+														'task-check-control'
+													}
+												/>
+												{ task.documentLink && (
+													<ExternalLink
+														href={
+															task.documentLink
+																.url
+														}
+														target={
+															task.documentLink
+																.target
+														}
+													>
+														{
+															task.documentLink
+																.title
+														}
+													</ExternalLink>
+												) }
+												<Button
+													disabled={ addingTask }
+													onClick={ () =>
+														onEditTaskItem(
+															task,
+															index
+														)
+													}
+													variant="secondary"
+													isSmall={ true }
+												>
+													{ __(
+														'Edit',
+														'd2i-task-list-blocks'
+													) }
+												</Button>
+											</>
+										) }
+
+										{ task.isEdit && (
+											<TaskEdit task={task}/>
 										) }
 									</li>
 								) ) }

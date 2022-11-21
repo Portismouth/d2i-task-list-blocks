@@ -1,20 +1,12 @@
 import { __ } from '@wordpress/i18n';
-import { useEffect, useState } from '@wordpress/element';
 import {
 	useBlockProps,
 	InspectorControls,
 	InnerBlocks,
-	RichText
+	RichText,
 } from '@wordpress/block-editor';
-import {
-	CheckboxControl,
-	TextControl,
-	Button,
-	SelectControl,
-	PanelBody,
-} from '@wordpress/components';
+import { SelectControl, PanelBody } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
-import apiFetch from '@wordpress/api-fetch';
 import './editor.scss';
 
 export default function Edit( { attributes, setAttributes } ) {
@@ -46,7 +38,7 @@ export default function Edit( { attributes, setAttributes } ) {
 		}
 
 		return schoolsArray;
-	} );
+	}, [] );
 
 	return (
 		<div { ...useBlockProps() }>
@@ -71,7 +63,7 @@ export default function Edit( { attributes, setAttributes } ) {
 			<InnerBlocks
 				allowedBlocks={ [ 'd2i-blocks/task-item' ] }
 				template={ [ [ 'd2i-blocks/task-item' ] ] }
-				renderAppender={false}
+				renderAppender={ false }
 			/>
 		</div>
 	);
