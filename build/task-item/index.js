@@ -42,7 +42,6 @@ function Edit(_ref) {
     context
   } = _ref;
   const schoolId = context['d2i-task-list/schoolId'];
-  const directoryNameFromContext = context['d2i-task-list/directoryName'];
   const {
     directoryName
   } = attributes;
@@ -55,45 +54,70 @@ function Edit(_ref) {
   });
   const [isUnsavedTasksConfirmed, setUnsavedTasksConfirmed] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const taskTitleRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)();
+  const actions = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_3__.useDispatch)('d2i/tasks');
+  const addTask = actions && actions.addTask;
+  const deleteTask = actions && actions.deleteTask;
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    if (schoolId !== 0 && directoryNameFromContext) {
+    if (schoolId !== 0 && directoryName) {
       _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6___default()({
         path: `/d2i-task-list/v1/task-items/${schoolId}?directoryName=${directoryName}`
       }).then(res => {
-        setTasks({
-          tasks: res
-        });
+        if (res.length > 0) {
+          setTasks({
+            tasks: res
+          });
+          setUnsavedTasksConfirmed(true);
+        } else {
+          _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6___default()({
+            path: `/d2i-task-list/v1/task-items/by-folder?directoryName=${directoryName}`
+          }).then(emptyTasks => {
+            setTasks({
+              tasks: emptyTasks
+            });
+            if (emptyTasks.length < 1) {
+              setUnsavedTasksConfirmed(true);
+            }
+          });
+        }
       });
-    }
-  }, [schoolId, directoryNameFromContext]);
-  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    setAttributes({
-      directoryName: directoryNameFromContext
-    });
-  }, [null, directoryNameFromContext]);
-  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    if (directoryName) {
+    } else if (directoryName && schoolId === 0) {
       _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6___default()({
         path: `/d2i-task-list/v1/task-items/by-folder?directoryName=${directoryName}`
-      }).then(res => {
+      }).then(emptyTasks => {
         setTasks({
-          tasks: res
+          tasks: emptyTasks
         });
+        if (emptyTasks.length < 1) {
+          setUnsavedTasksConfirmed(true);
+        }
       });
     }
   }, [directoryName]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setAttributes({
+      directoryName
+    });
+  }, [null, directoryName]);
   const onToggleTask = (task, index) => {
-    task.isCompleted = task.isCompleted === '1' ? '0' : '1';
+    if (task.isCompleted === '1') {
+      task.isCompleted = '0';
+    } else if (task.isCompleted === '0') {
+      task.isCompleted = '1';
+    } else if (task.isCompleted === true) {
+      task.isCompleted = false;
+    } else {
+      task.isCompleted = true;
+    }
     const tasksCopy = [...tasksState.tasks];
     tasksCopy[index] = {
-      ...tasksCopy[index],
+      ...task,
       isCompleted: task.isCompleted
     };
     _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6___default()({
       path: `/d2i-task-list/v1/task-items/${task.id}`,
       method: 'POST',
       data: tasksCopy[index]
-    }).then(res => {
+    }).then(() => {
       setTasks({
         tasks: tasksCopy
       });
@@ -123,38 +147,98 @@ function Edit(_ref) {
     }
     setNewTaskType(v);
   };
-  const onConfirmUnsavedTasks = event => {
-    if (tasksState.tasks) {
-      console.log(event);
-      setUnsavedTasksConfirmed(true);
-    }
+  const onConfirmUnsavedTasks = () => {
+    const tasks = tasksState.tasks.map(task => {
+      const newTask = {
+        ...task,
+        schoolId,
+        directoryName
+      };
+      if (task.documentLink) {
+        newTask.documentLink = task.documentLink;
+      }
+      return newTask;
+    });
+    _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6___default()({
+      path: '/d2i-task-list/v1/task-items/confirm-new',
+      method: 'POST',
+      data: tasks
+    }).then(res => {
+      setTasks({
+        tasks: res
+      });
+      if (tasksState.tasks) {
+        setUnsavedTasksConfirmed(true);
+      }
+    });
   };
   const onEditTaskItem = (task, index) => {
     task.isEdit = !task.isEdit;
     const tasksCopy = [...tasksState.tasks];
     tasksCopy[index] = {
-      ...tasksCopy[index],
-      isEdit: task.isEdit
+      ...task
     };
     setTasks({
       tasks: tasksCopy
     });
   };
-  const actions = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_3__.useDispatch)('d2i/tasks');
-  const addTask = actions && actions.addTask;
-  return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)(), !tasksState.tasks || tasksState.tasks.length < 1 && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.Card, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.CardBody, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Please add some tasks using the form below', 'd2i-task-list-blocks')))), tasksState.tasks && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.Card, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.CardHeader, {
+  const onChangeName = newName => {
+    setAttributes({
+      directoryName: newName
+    });
+  };
+  const onTaskSubmit = async e => {
+    e.preventDefault();
+    if (addTask && newTaskTitle) {
+      const newTask = {
+        title: newTaskTitle,
+        schoolId,
+        directoryName,
+        newTaskType,
+        isCompleted: '0'
+      };
+      if (externalLink) {
+        newTask.documentLink = externalLink;
+      }
+      setAddingTask(true);
+      const newSavedTask = await addTask(newTask);
+      setNewTaskTitle('');
+      setNewTaskType('');
+      setExternalLink();
+      setTasks({
+        tasks: [...tasksState.tasks, newSavedTask.task]
+      });
+      setAddingTask(false);
+      taskTitleRef.current.focus();
+    }
+  };
+  const onDeleteTask = async (task, index) => {
+    await deleteTask(task, index);
+    const tasksCopy = [...tasksState.tasks];
+    tasksCopy.splice(index, 1);
+    setTasks({
+      tasks: tasksCopy
+    });
+  };
+  return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)(), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.RichText, {
+    placeholder: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Folder Name', 'team-member'),
+    tagName: "h2",
+    onChange: onChangeName,
+    value: directoryName,
+    allowedFormats: []
+  }), !tasksState.tasks || tasksState.tasks.length < 1 && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.Card, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.CardBody, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Please add some tasks using the form below', 'd2i-task-list-blocks')))), tasksState.tasks && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.Card, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.CardHeader, {
     size: "xSmall"
   }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, "Tasks", !isUnsavedTasksConfirmed && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.Button, {
-    disabled: addingTask,
+    disabled: addingTask || schoolId === 0 || !schoolId,
     onClick: onConfirmUnsavedTasks,
     isPrimary: true
   }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Confirm New Tasks', 'd2i-task-list-blocks')))), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.CardBody, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", null, tasksState.tasks.map((task, index) => (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
     key: index,
-    className: task.isCompleted === '1' && 'is-completed'
+    className: (task.isCompleted === '1' || task.isCompleted === true) && 'is-completed'
   }, !task.isEdit && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.CheckboxControl, {
     disabled: task.loading,
     label: task.title,
-    checked: task.isCompleted === '1',
+    checked: task.isCompleted === '1' || task.isCompleted === true,
     onChange: () => {
       onToggleTask(task, index);
     },
@@ -163,40 +247,24 @@ function Edit(_ref) {
     href: task.documentLink.url,
     target: task.documentLink.target
   }, task.documentLink.title), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.Button, {
-    disabled: addingTask,
+    disabled: addingTask || task.isCompleted === '1' || task.isCompleted === true,
     onClick: () => onEditTaskItem(task, index),
     variant: "secondary",
     isSmall: true
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Edit', 'd2i-task-list-blocks'))), task.isEdit && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_task_edit__WEBPACK_IMPORTED_MODULE_7__["default"], {
-    task: task
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Edit', 'd2i-task-list-blocks')), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.Button, {
+    disabled: task.isCompleted === '1' || task.isCompleted === true,
+    onClick: () => onDeleteTask(task, index),
+    isDestructive: true,
+    variant: "tertiary",
+    isSmall: true
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Delete', 'd2i-task-list-blocks'))), task.isEdit && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_task_edit__WEBPACK_IMPORTED_MODULE_7__["default"], {
+    task: task,
+    index: index,
+    toggleTaskEdit: onEditTaskItem
   })))))), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.Card, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.CardHeader, {
     size: 'xSmall'
   }, "New Tasks"), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.CardBody, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
-    onSubmit: async e => {
-      e.preventDefault();
-      if (addTask && newTaskTitle) {
-        const newTask = {
-          title: newTaskTitle,
-          schoolId,
-          directoryName,
-          newTaskType,
-          isCompleted: '0'
-        };
-        if (externalLink) {
-          newTask.documentLink = externalLink;
-        }
-        setAddingTask(true);
-        const newSavedTask = await addTask(newTask);
-        setNewTaskTitle('');
-        setNewTaskType('');
-        setExternalLink();
-        setTasks({
-          tasks: [...tasksState.tasks, newSavedTask.task]
-        });
-        setAddingTask(false);
-        taskTitleRef.current.focus();
-      }
-    },
+    onSubmit: onTaskSubmit,
     className: "addtodo-form"
   }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.TextControl, {
     ref: taskTitleRef,
@@ -287,17 +355,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
 /* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @wordpress/block-editor */ "@wordpress/block-editor");
-/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _wordpress_data__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @wordpress/data */ "@wordpress/data");
-/* harmony import */ var _wordpress_data__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_wordpress_data__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @wordpress/components */ "@wordpress/components");
-/* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _editor_scss__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./editor.scss */ "./src/task-item/editor.scss");
-/* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @wordpress/api-fetch */ "@wordpress/api-fetch");
-/* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_6__);
-
-
+/* harmony import */ var _wordpress_data__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @wordpress/data */ "@wordpress/data");
+/* harmony import */ var _wordpress_data__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_wordpress_data__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @wordpress/components */ "@wordpress/components");
+/* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _editor_scss__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./editor.scss */ "./src/task-item/editor.scss");
 
 
 
@@ -306,9 +368,12 @@ __webpack_require__.r(__webpack_exports__);
 
 function TaskEdit(_ref) {
   let {
-    task
+    task,
+    index,
+    toggleTaskEdit
   } = _ref;
-  console.log(task);
+  const actions = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_2__.useDispatch)('d2i/tasks');
+  const editTask = actions && actions.editTask;
   const taskTitleRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)();
   const [newTaskTitle, setNewTaskTitle] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(task.title);
   const [newTaskType, setNewTaskType] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(task.taskType);
@@ -338,14 +403,39 @@ function TaskEdit(_ref) {
     }
     setNewTaskType(v);
   };
+  const onTaskSubmit = async e => {
+    e.preventDefault();
+    if (editTask && newTaskTitle) {
+      const newTask = {
+        title: newTaskTitle,
+        schoolId: task.schoolId,
+        folder: task.folder,
+        taskType: task.taskType,
+        isCompleted: '0',
+        id: task.id
+      };
+      if (externalLink) {
+        newTask.documentLink = externalLink;
+      }
+      setAddingTask(true);
+      const newSavedTask = await editTask(newTask);
+      newSavedTask.task.isEdit = task.isEdit;
+      setNewTaskTitle('');
+      setNewTaskType('');
+      setExternalLink();
+      setAddingTask(false);
+      toggleTaskEdit(newSavedTask.task, index);
+    }
+  };
   return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
-    className: "addtodo-form"
-  }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.TextControl, {
+    className: "addtodo-form",
+    onSubmit: onTaskSubmit
+  }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.TextControl, {
     ref: taskTitleRef,
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Task name', 'd2i-task-list-blocks'),
     value: newTaskTitle,
     onChange: v => setNewTaskTitle(v)
-  }), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.RadioControl, {
+  }), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.RadioControl, {
     selected: newTaskType,
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Document Type', 'd2i-task-list-blocks'),
     help: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Whether this doc is an upload or link to download', 'd2i-task-list-blocks'),
@@ -357,19 +447,23 @@ function TaskEdit(_ref) {
       value: 'external_link'
     }],
     onChange: onSetNewTaskType
-  }), newTaskType === 'external_link' && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.TextControl, {
+  }), newTaskType === 'external_link' && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.TextControl, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Link Title', 'd2i-task-list-blocks'),
-    value: externalLink.title,
+    value: externalLink ? externalLink.title : null,
     onChange: onLinkTitleChange
-  }), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.TextControl, {
+  }), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.TextControl, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Link URL', 'd2i-task-list-blocks'),
-    value: externalLink.url,
+    value: externalLink ? externalLink.url : null,
     onChange: onLinkUrlChange
-  })), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.Button, {
+  })), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
     disabled: addingTask,
     type: "submit",
     isPrimary: true
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Add Task', 'todo-list')));
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Save Changes', 'todo-list')), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
+    disabled: addingTask,
+    onClick: () => toggleTaskEdit(task, index),
+    variant: "tertiary"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Cancel', 'todo-list')));
 }
 
 /***/ }),
@@ -474,7 +568,7 @@ module.exports = window["wp"]["i18n"];
   \**********************************/
 /***/ (function(module) {
 
-module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"d2i-blocks/task-item","version":"0.1.0","title":"Task Item","category":"widgets","icon":"yes","description":"A school task list item","parent":["d2i-blocks/task-list"],"supports":{"html":false,"reusable":false},"textdomain":"d2i-task-list-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","attributes":{"directoryName":{"type":"string","default":""}},"usesContext":["d2i-task-list/schoolId","d2i-task-list/directoryName"]}');
+module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":2,"name":"d2i-blocks/task-item","version":"0.1.0","title":"Task Item","category":"widgets","icon":"yes","description":"A school task list item","parent":["d2i-blocks/task-list"],"supports":{"html":false,"reusable":false},"textdomain":"d2i-task-list-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","attributes":{"directoryName":{"type":"string","default":""}},"usesContext":["d2i-task-list/schoolId"]}');
 
 /***/ })
 

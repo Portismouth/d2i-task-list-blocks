@@ -19,15 +19,9 @@
     "schoolId": {
       "type": "number",
       "default": 0
-    },
-    "listName": {
-      "type": "string",
-      "source": "html",
-      "selector": "h2"
     }
   },
   "providesContext": {
-    "d2i-task-list/schoolId": "schoolId",
-    "d2i-task-list/directoryName": "listName"
+    "d2i-task-list/schoolId": "schoolId"
   }
 }

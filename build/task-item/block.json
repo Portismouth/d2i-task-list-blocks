@@ -25,7 +25,6 @@
     }
   },
   "usesContext": [
-    "d2i-task-list/schoolId",
-    "d2i-task-list/directoryName"
+    "d2i-task-list/schoolId"
   ]
 }

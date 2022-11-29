@@ -3,19 +3,15 @@ import {
 	useBlockProps,
 	InspectorControls,
 	InnerBlocks,
-	RichText,
 } from '@wordpress/block-editor';
 import { SelectControl, PanelBody } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import './editor.scss';
 
 export default function Edit( { attributes, setAttributes } ) {
-	const { schoolId, listName } = attributes;
+	const { schoolId } = attributes;
 	const onChangeSchool = ( newSchool ) => {
 		setAttributes( { schoolId: parseInt( newSchool ) } );
-	};
-	const onChangeName = ( newName ) => {
-		setAttributes( { listName: newName } );
 	};
 
 	const schools = useSelect( ( select ) => {
@@ -52,18 +48,43 @@ export default function Edit( { attributes, setAttributes } ) {
 					/>
 				</PanelBody>
 			</InspectorControls>
-			<RichText
-				placeholder={ __( 'Folder Name', 'team-member' ) }
-				tagName="h2"
-				onChange={ onChangeName }
-				value={ listName }
-				allowedFormats={ [] }
-			/>
 
 			<InnerBlocks
 				allowedBlocks={ [ 'd2i-blocks/task-item' ] }
-				template={ [ [ 'd2i-blocks/task-item' ] ] }
-				renderAppender={ false }
+				template={ [
+					[
+						'd2i-blocks/task-item',
+						{ directoryName: 'Account Information' },
+					],
+					[
+						'd2i-blocks/task-item',
+						{ directoryName: 'Assessment Index (3-8)' },
+					],
+					[
+						'd2i-blocks/task-item',
+						{ directoryName: 'Assessment Index (High School)/Year 1' },
+					],
+					[
+						'd2i-blocks/task-item',
+						{ directoryName: 'Assessment Index (High School)/Year 2' },
+					],
+					[
+						'd2i-blocks/task-item',
+						{ directoryName: 'Assessment Index (High School)/Year 3' },
+					],
+					[
+						'd2i-blocks/task-item',
+						{ directoryName: 'Final Grade (3-8)/Year 1' },
+					],
+					[
+						'd2i-blocks/task-item',
+						{ directoryName: 'Final Grade (High School)/Year 1' },
+					],
+					[
+						'd2i-blocks/task-item',
+						{ directoryName: 'Progress Index' },
+					],
+				] }
 			/>
 		</div>
 	);

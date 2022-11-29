@@ -1,5 +1,5 @@
 import { __ } from '@wordpress/i18n';
-import { useBlockProps } from '@wordpress/block-editor';
+import { useBlockProps, RichText } from '@wordpress/block-editor';
 import { useDispatch } from '@wordpress/data';
 import {
 	CheckboxControl,
@@ -18,7 +18,6 @@ import TaskEdit from './task-edit';
 
 export default function Edit( { attributes, setAttributes, context } ) {
 	const schoolId = context[ 'd2i-task-list/schoolId' ];
-	const directoryNameFromContext = context[ 'd2i-task-list/directoryName' ];
 	const { directoryName } = attributes;
 
 	const [ newTaskTitle, setNewTaskTitle ] = useState( '' );
@@ -30,43 +29,66 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		useState( false );
 
 	const taskTitleRef = useRef();
+	const actions = useDispatch( 'd2i/tasks' );
+	const addTask = actions && actions.addTask;
+	const deleteTask = actions && actions.deleteTask;
 
 	useEffect( () => {
-		if ( schoolId !== 0 && directoryNameFromContext ) {
+		if ( schoolId !== 0 && directoryName ) {
 			apiFetch( {
 				path: `/d2i-task-list/v1/task-items/${ schoolId }?directoryName=${ directoryName }`,
 			} ).then( ( res ) => {
-				setTasks( { tasks: res } );
+				if ( res.length > 0 ) {
+					setTasks( { tasks: res } );
+					setUnsavedTasksConfirmed( true );
+				} else {
+					apiFetch( {
+						path: `/d2i-task-list/v1/task-items/by-folder?directoryName=${ directoryName }`,
+					} ).then( ( emptyTasks ) => {
+						setTasks( { tasks: emptyTasks } );
+						if ( emptyTasks.length < 1 ) {
+							setUnsavedTasksConfirmed( true );
+						}
+					} );
+				}
 			} );
-		}
-	}, [ schoolId, directoryNameFromContext ] );
-
-	useEffect( () => {
-		setAttributes( { directoryName: directoryNameFromContext } );
-	}, [ null, directoryNameFromContext ] );
-
-	useEffect( () => {
-		if ( directoryName ) {
+		} else if ( directoryName && schoolId === 0 ) {
 			apiFetch( {
 				path: `/d2i-task-list/v1/task-items/by-folder?directoryName=${ directoryName }`,
-			} ).then( ( res ) => {
-				setTasks( { tasks: res } );
+			} ).then( ( emptyTasks ) => {
+				setTasks( { tasks: emptyTasks } );
+				if ( emptyTasks.length < 1 ) {
+					setUnsavedTasksConfirmed( true );
+				}
 			} );
 		}
 	}, [ directoryName ] );
 
+	useEffect( () => {
+		setAttributes( { directoryName } );
+	}, [ null, directoryName ] );
+
 	const onToggleTask = ( task, index ) => {
-		task.isCompleted = task.isCompleted === '1' ? '0' : '1';
+		if ( task.isCompleted === '1' ) {
+			task.isCompleted = '0';
+		} else if ( task.isCompleted === '0' ) {
+			task.isCompleted = '1';
+		} else if ( task.isCompleted === true ) {
+			task.isCompleted = false;
+		} else {
+			task.isCompleted = true;
+		}
 		const tasksCopy = [ ...tasksState.tasks ];
 		tasksCopy[ index ] = {
-			...tasksCopy[ index ],
+			...task,
 			isCompleted: task.isCompleted,
 		};
+
 		apiFetch( {
 			path: `/d2i-task-list/v1/task-items/${ task.id }`,
 			method: 'POST',
 			data: tasksCopy[ index ],
-		} ).then( ( res ) => {
+		} ).then( () => {
 			setTasks( { tasks: tasksCopy } );
 		} );
 	};
@@ -99,28 +121,84 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		setNewTaskType( v );
 	};
 
-	const onConfirmUnsavedTasks = ( event ) => {
-		if ( tasksState.tasks ) {
-			console.log( event );
-			setUnsavedTasksConfirmed( true );
-		}
+	const onConfirmUnsavedTasks = () => {
+		const tasks = tasksState.tasks.map( ( task ) => {
+			const newTask = { ...task, schoolId, directoryName };
+			if ( task.documentLink ) {
+				newTask.documentLink = task.documentLink;
+			}
+
+			return newTask;
+		} );
+
+		apiFetch( {
+			path: '/d2i-task-list/v1/task-items/confirm-new',
+			method: 'POST',
+			data: tasks,
+		} ).then( ( res ) => {
+			setTasks( { tasks: res } );
+			if ( tasksState.tasks ) {
+				setUnsavedTasksConfirmed( true );
+			}
+		} );
 	};
 
 	const onEditTaskItem = ( task, index ) => {
 		task.isEdit = ! task.isEdit;
 		const tasksCopy = [ ...tasksState.tasks ];
 		tasksCopy[ index ] = {
-			...tasksCopy[ index ],
-			isEdit: task.isEdit,
+			...task,
 		};
 
 		setTasks( { tasks: tasksCopy } );
 	};
 
-	const actions = useDispatch( 'd2i/tasks' );
-	const addTask = actions && actions.addTask;
+	const onChangeName = ( newName ) => {
+		setAttributes( { directoryName: newName } );
+	};
+
+	const onTaskSubmit = async ( e ) => {
+		e.preventDefault();
+		if ( addTask && newTaskTitle ) {
+			const newTask = {
+				title: newTaskTitle,
+				schoolId,
+				directoryName,
+				newTaskType,
+				isCompleted: '0',
+			};
+			if ( externalLink ) {
+				newTask.documentLink = externalLink;
+			}
+			setAddingTask( true );
+			const newSavedTask = await addTask( newTask );
+			setNewTaskTitle( '' );
+			setNewTaskType( '' );
+			setExternalLink();
+			setTasks( {
+				tasks: [ ...tasksState.tasks, newSavedTask.task ],
+			} );
+			setAddingTask( false );
+			taskTitleRef.current.focus();
+		}
+	};
+
+	const onDeleteTask = async ( task, index ) => {
+		await deleteTask( task, index );
+		const tasksCopy = [ ...tasksState.tasks ];
+		tasksCopy.splice( index, 1 );
+		setTasks( { tasks: tasksCopy } );
+	};
+
 	return (
 		<div { ...useBlockProps() }>
+			<RichText
+				placeholder={ __( 'Folder Name', 'team-member' ) }
+				tagName="h2"
+				onChange={ onChangeName }
+				value={ directoryName }
+				allowedFormats={ [] }
+			/>
 			{ ! tasksState.tasks ||
 				( tasksState.tasks.length < 1 && (
 					<Card>
@@ -142,7 +220,11 @@ export default function Edit( { attributes, setAttributes, context } ) {
 								Tasks
 								{ ! isUnsavedTasksConfirmed && (
 									<Button
-										disabled={ addingTask }
+										disabled={
+											addingTask ||
+											schoolId === 0 ||
+											! schoolId
+										}
 										onClick={ onConfirmUnsavedTasks }
 										isPrimary
 									>
@@ -160,7 +242,8 @@ export default function Edit( { attributes, setAttributes, context } ) {
 									<li
 										key={ index }
 										className={
-											task.isCompleted === '1' &&
+											( task.isCompleted === '1' ||
+												task.isCompleted === true ) &&
 											'is-completed'
 										}
 									>
@@ -170,7 +253,10 @@ export default function Edit( { attributes, setAttributes, context } ) {
 													disabled={ task.loading }
 													label={ task.title }
 													checked={
-														task.isCompleted === '1'
+														task.isCompleted ===
+															'1' ||
+														task.isCompleted ===
+															true
 													}
 													onChange={ () => {
 														onToggleTask(
@@ -200,7 +286,13 @@ export default function Edit( { attributes, setAttributes, context } ) {
 													</ExternalLink>
 												) }
 												<Button
-													disabled={ addingTask }
+													disabled={
+														addingTask ||
+														task.isCompleted ===
+															'1' ||
+														task.isCompleted ===
+															true
+													}
 													onClick={ () =>
 														onEditTaskItem(
 															task,
@@ -215,11 +307,39 @@ export default function Edit( { attributes, setAttributes, context } ) {
 														'd2i-task-list-blocks'
 													) }
 												</Button>
+												<Button
+													disabled={
+														task.isCompleted ===
+															'1' ||
+														task.isCompleted ===
+															true
+													}
+													onClick={ () =>
+														onDeleteTask(
+															task,
+															index
+														)
+													}
+													isDestructive={ true }
+													variant="tertiary"
+													isSmall={ true }
+												>
+													{ __(
+														'Delete',
+														'd2i-task-list-blocks'
+													) }
+												</Button>
 											</>
 										) }
 
 										{ task.isEdit && (
-											<TaskEdit task={task}/>
+											<TaskEdit
+												task={ task }
+												index={ index }
+												toggleTaskEdit={
+													onEditTaskItem
+												}
+											/>
 										) }
 									</li>
 								) ) }
@@ -230,36 +350,7 @@ export default function Edit( { attributes, setAttributes, context } ) {
 						<CardHeader size={ 'xSmall' }>New Tasks</CardHeader>
 						<CardBody>
 							<form
-								onSubmit={ async ( e ) => {
-									e.preventDefault();
-									if ( addTask && newTaskTitle ) {
-										const newTask = {
-											title: newTaskTitle,
-											schoolId,
-											directoryName,
-											newTaskType,
-											isCompleted: '0',
-										};
-										if ( externalLink ) {
-											newTask.documentLink = externalLink;
-										}
-										setAddingTask( true );
-										const newSavedTask = await addTask(
-											newTask
-										);
-										setNewTaskTitle( '' );
-										setNewTaskType( '' );
-										setExternalLink();
-										setTasks( {
-											tasks: [
-												...tasksState.tasks,
-												newSavedTask.task,
-											],
-										} );
-										setAddingTask( false );
-										taskTitleRef.current.focus();
-									}
-								} }
+								onSubmit={ onTaskSubmit }
 								className="addtodo-form"
 							>
 								<TextControl

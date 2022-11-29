@@ -1,7 +1,7 @@
 import { useBlockProps, InnerBlocks, RichText } from '@wordpress/block-editor';
 
 export default function save( { attributes } ) {
-	const { schoolId, listName } = attributes;
+	const { listName } = attributes;
 	return (
 		<div { ...useBlockProps.save() }>
 			{ listName && (

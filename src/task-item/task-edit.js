@@ -1,22 +1,13 @@
 import { __ } from '@wordpress/i18n';
-import { useBlockProps } from '@wordpress/block-editor';
 import { useDispatch } from '@wordpress/data';
-import {
-	CheckboxControl,
-	TextControl,
-	Button,
-	RadioControl,
-	Card,
-	CardBody,
-	CardHeader,
-	ExternalLink,
-} from '@wordpress/components';
+import { TextControl, Button, RadioControl } from '@wordpress/components';
 import './editor.scss';
-import { useState, useEffect, useRef } from '@wordpress/element';
-import apiFetch from '@wordpress/api-fetch';
+import { useState, useRef } from '@wordpress/element';
 
-export default function TaskEdit( {task} ) {
-	console.log(task);
+export default function TaskEdit( { task, index, toggleTaskEdit } ) {
+	const actions = useDispatch( 'd2i/tasks' );
+	const editTask = actions && actions.editTask;
+
 	const taskTitleRef = useRef();
 	const [ newTaskTitle, setNewTaskTitle ] = useState( task.title );
 	const [ newTaskType, setNewTaskType ] = useState( task.taskType );
@@ -51,10 +42,33 @@ export default function TaskEdit( {task} ) {
 		setNewTaskType( v );
 	};
 
+	const onTaskSubmit = async ( e ) => {
+		e.preventDefault();
+		if ( editTask && newTaskTitle ) {
+			const newTask = {
+				title: newTaskTitle,
+				schoolId: task.schoolId,
+				folder: task.folder,
+				taskType: task.taskType,
+				isCompleted: '0',
+				id: task.id,
+			};
+			if ( externalLink ) {
+				newTask.documentLink = externalLink;
+			}
+			setAddingTask( true );
+			const newSavedTask = await editTask( newTask );
+			newSavedTask.task.isEdit = task.isEdit;
+			setNewTaskTitle( '' );
+			setNewTaskType( '' );
+			setExternalLink();
+			setAddingTask( false );
+			toggleTaskEdit(newSavedTask.task, index);
+		}
+	};
+
 	return (
-		<form
-			className="addtodo-form"
-		>
+		<form className="addtodo-form" onSubmit={ onTaskSubmit }>
 			<TextControl
 				ref={ taskTitleRef }
 				label={ __( 'Task name', 'd2i-task-list-blocks' ) }
@@ -81,18 +95,25 @@ export default function TaskEdit( {task} ) {
 				<>
 					<TextControl
 						label={ __( 'Link Title', 'd2i-task-list-blocks' ) }
-						value={ externalLink.title }
+						value={ externalLink ? externalLink.title : null }
 						onChange={ onLinkTitleChange }
 					/>
 					<TextControl
 						label={ __( 'Link URL', 'd2i-task-list-blocks' ) }
-						value={ externalLink.url }
+						value={ externalLink ? externalLink.url : null }
 						onChange={ onLinkUrlChange }
 					/>
 				</>
 			) }
 			<Button disabled={ addingTask } type="submit" isPrimary>
-				{ __( 'Add Task', 'todo-list' ) }
+				{ __( 'Save Changes', 'todo-list' ) }
+			</Button>
+			<Button
+				disabled={ addingTask }
+				onClick={ () => toggleTaskEdit( task, index ) }
+				variant="tertiary"
+			>
+				{ __( 'Cancel', 'todo-list' ) }
 			</Button>
 		</form>
 	);

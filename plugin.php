@@ -45,29 +45,35 @@ function d2i_task_list_render_tasks($attributes, $content, $block)
 		'order'       => 'ASC',
 	);
 
+	$school_name = get_post($school_id)->post_title;
+
 	$school_tasks = get_posts($args);
-	$tasks = '<ul>';
+	$tasks = '<h2>';
+	$tasks .= get_field('folder', $school_tasks[0]->ID);
+	$tasks .= '</h2>';
+	$tasks .= '<ul>';
+
 	foreach ($school_tasks as $task) {
 		$completed = get_field('is_completed', $task->ID);
-		$is_completed = $completed == '1';
+		$is_completed = $completed == '1' || $completed == true;
 		$document_link = get_field('document_link', $task->ID);
 		$task_type = get_field('task_type', $task->ID);
-
 		if ($is_completed == true) {
 			$tasks .= '<li class="is-completed">';
 		} else {
-			$tasks .= '<li class="">';
+			$tasks .= '<li>';
 		}
 
 		$tasks .= '<div>';
-		$tasks .= '<h3 class="task-title">' . get_the_title($task) . '</h3>';
+		$tasks .= '<h4 class="task-title">' . get_the_title($task) . '</h4>';
 		if ($task_type == 'upload') {
-			$tasks .= '<form action="/wp-content/themes/blocks/lib/sharepoint-helper.php" enctype="multipart/form-data" method="post" id="task-form" name="task-form" class="task-form" novalidate>';
-			$tasks .= '<input type="hidden" name="folderName" value="' . get_field('folder', $task->ID) . '">';
-			if ($is_completed == true) {
+			$folder = $school_name . '/' . get_field('folder', $task->ID);
+			$tasks .= '<form action="' . get_template_directory() . '/lib/sharepoint-helper.php" enctype="multipart/form-data" method="post" id="task-form" name="task-form" class="task-form" novalidate>';
+			$tasks .= '<input type="hidden" name="folderName" value="' . $folder . '">';
+			if ($is_completed == true ) {
 				$tasks .= '<input type="file" name="fileInput" id="fileInput" name="file" disabled>';
 			} else {
-				$tasks .= '<input type="file" name="fileInput" id="fileInput" name="file">';
+				$tasks .= '<input type="file" name="fileInput" id="fileInput" name="file" accept=".xls,.xlsx,.docx">';
 			}
 			$tasks .= '<input type="submit" value="Upload ' . get_the_title($task) . '">';
 		} else if ($document_link['title'] && $document_link['url']) {
