@@ -2,11 +2,37 @@
 
 	.task-title {
 		margin: 0;
+		color: #fff;
+	}
+
+	.task-form {
+
+		input[type="submit"] {
+			background-color: #0bc4d3;
+		}
+	}
+
+	.task-group {
+		background-color: #262447;
+		color: #fff;
+		border-radius: 20px;
+	}
+
+	.task-group-file-input {
+		color: #fff;
+	}
+
+	.task-group-external-link {
+		color: #fff;
+
+		&:visited {
+			color: #808080;
+		}
 	}
 
 	ul {
 		list-style-type: none;
-		padding: 0;
+		padding: 20px;
 		margin: 0;
 
 		li {

@@ -48,7 +48,6 @@ export default function Edit( { attributes, setAttributes } ) {
 					/>
 				</PanelBody>
 			</InspectorControls>
-
 			<InnerBlocks
 				allowedBlocks={ [ 'd2i-blocks/task-item' ] }
 				template={ [
@@ -62,15 +61,24 @@ export default function Edit( { attributes, setAttributes } ) {
 					],
 					[
 						'd2i-blocks/task-item',
-						{ directoryName: 'Assessment Index (High School)/Year 1' },
+						{
+							directoryName:
+								'Assessment Index (High School)/Year 1',
+						},
 					],
 					[
 						'd2i-blocks/task-item',
-						{ directoryName: 'Assessment Index (High School)/Year 2' },
+						{
+							directoryName:
+								'Assessment Index (High School)/Year 2',
+						},
 					],
 					[
 						'd2i-blocks/task-item',
-						{ directoryName: 'Assessment Index (High School)/Year 3' },
+						{
+							directoryName:
+								'Assessment Index (High School)/Year 3',
+						},
 					],
 					[
 						'd2i-blocks/task-item',
