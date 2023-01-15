@@ -19,7 +19,7 @@ class SchoolDocs
     {
         try {
             //1. Initialize SharePoint client with user credentials
-            $this->credentials = (new ClientCredentials($this->clientId, $this->clientSecret));
+            $this->credentials = (new ClientCredential($this->clientId, $this->clientSecret));
 			echo
             $this->client = (new ClientContext("https://data2information.sharepoint.com/sites/TestSite-Renee"))->withCredentials($this->credentials);
 

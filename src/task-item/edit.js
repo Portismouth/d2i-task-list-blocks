@@ -291,7 +291,8 @@ export default function Edit( { attributes, setAttributes, context } ) {
 														task.isCompleted ===
 															'1' ||
 														task.isCompleted ===
-															true
+															true ||
+														!isUnsavedTasksConfirmed
 													}
 													onClick={ () =>
 														onEditTaskItem(
@@ -312,7 +313,8 @@ export default function Edit( { attributes, setAttributes, context } ) {
 														task.isCompleted ===
 															'1' ||
 														task.isCompleted ===
-															true
+															true ||
+														!isUnsavedTasksConfirmed
 													}
 													onClick={ () =>
 														onDeleteTask(

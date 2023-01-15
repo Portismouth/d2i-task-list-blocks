@@ -125,7 +125,7 @@ add_filter('rest_task-item_query', function ($args, $request) {
 function add_custom_field()
 {
 	register_rest_field(
-		'task-item',
+		'task_item',
 		'folder',
 		array(
 			'get_callback'      => 'rest_get_post_field',
@@ -134,7 +134,7 @@ function add_custom_field()
 		)
 	);
 	register_rest_field(
-		'task-item',
+		'task_item',
 		'school',
 		array(
 			'get_callback'      => 'rest_get_school_field',

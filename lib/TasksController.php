@@ -32,6 +32,11 @@ class D2i_Tasks_Custom_Routes extends WP_REST_Controller
 			'callback' => array($this, 'd2i_confirm_tasks')
 		));
 
+		register_rest_route($namespace, $base . '/folders', array(
+			'methods'  => 'GET',
+			'callback' => array($this, 'd2i_get_folders')
+		));
+
 		register_rest_route($namespace, $base . '/(?P<schoolId>\d+)', array(
 			array(
 				'methods'  => WP_REST_Server::EDITABLE,
@@ -42,6 +47,21 @@ class D2i_Tasks_Custom_Routes extends WP_REST_Controller
 				'callback' => array($this, 'd2i_delete_task')
 			),
 		));
+	}
+
+	function d2i_get_folders()
+	{
+		$data = [];
+		global $wpdb; //(this is required when are you inside the function)
+
+		$values = $wpdb->get_results("SELECT DISTINCT meta_value FROM $wpdb->postmeta pm, $wpdb->posts p WHERE meta_key  = 'folder' and p.post_type='task_item' ",ARRAY_A);
+
+		foreach ($values as $value) {
+			# code...
+			array_push($data, $value['meta_value']);
+		}
+
+		return $data;
 	}
 
 	function d2i_schools($data)

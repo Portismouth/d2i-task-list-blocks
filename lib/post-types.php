@@ -64,7 +64,7 @@ function d2i_task_list_register_school()
 
 	$args = array(
 		'labels'             => $labels,
-		'description'        => __('Schhols', 'd2i-task-list'),
+		'description'        => __('Schools', 'd2i-task-list'),
 		'public'             => true,
 		'publicly_queryable' => true,
 		'show_ui'            => true,
